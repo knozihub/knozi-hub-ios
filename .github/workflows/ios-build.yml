@@ -56,6 +56,11 @@ jobs:
           APP="$(find build/derived/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' | head -1)"
           echo "Built: $APP"
           test -n "$APP"
+          echo "--- bundle root listing ---"
+          ls "$APP"
+          echo "--- locate player pages in bundle ---"
+          find "$APP" -name "index.html" -o -name "knozi-abc.html" | head
+          echo "--- assertions ---"
           # The pages rely on relative paths (owl-poses/, container-3d/, …) —
           # fail loudly if xcodegen flattened the folder reference.
           test -f "$APP/www/index.html"
