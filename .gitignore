@@ -1,0 +1,7 @@
+build/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+.DS_Store
+App/Resources/www/*
+!App/Resources/www/.gitkeep
