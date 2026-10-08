@@ -30,7 +30,9 @@ if [ -n "${ANDROID_ASSETS_DIR:-}" ] && [ -d "${ANDROID_ASSETS_DIR}" ]; then
 else
   echo "ANDROID_ASSETS_DIR not set — downloading latest public APK from knozihub.com/download"
   TMP="$(mktemp -d)"
-  curl -sSL --fail -o "$TMP/app.apk" "https://knozihub.com/download"
+  # Retry + timeout: a stalled R2/CDN leg must fail fast, never hang the job.
+  curl -sSL --fail --retry 3 --retry-all-errors --max-time 300 \
+    -o "$TMP/app.apk" "https://knozihub.com/download"
   # Sanity: must be a zip containing the web entry point.
   unzip -l "$TMP/app.apk" "assets/index.html" > /dev/null
   rm -rf "$WWW"
