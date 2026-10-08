@@ -38,6 +38,14 @@ jobs:
 
       - name: Generate Xcode project
         run: xcodegen generate
+      - name: Inspect generated project resources
+        run: |
+          echo "--- www references in pbxproj ---"
+          grep -n "www" KnoziHub.xcodeproj/project.pbxproj | head -20
+          echo "--- resources build phase ---"
+          grep -B2 -A 25 "isa = PBXResourcesBuildPhase" KnoziHub.xcodeproj/project.pbxproj | head -60
+          echo "--- xcodegen version ---"
+          xcodegen --version
 
       - name: Build unsigned release
         run: >
