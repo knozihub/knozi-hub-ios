@@ -1,0 +1,41 @@
+# Knozi Hub — iOS shell (xcodegen)
+#
+# The iOS app is a thin WKWebView shell around the SAME web assets the Android
+# app ships (index.html, knozi-abc.html, knozi-storybook.html, owl-poses/, …).
+# scripts/sync-assets.sh copies those assets into App/Resources/www before
+# xcodegen runs; www/ is bundled as a folder reference so the relative
+# directory structure the pages rely on is preserved.
+#
+# CI: brew install xcodegen && ./scripts/sync-assets.sh && xcodegen generate
+
+name: KnoziHub
+
+options:
+  bundleIdPrefix: com.knozi
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+targets:
+  KnoziHub:
+    type: application
+    platform: iOS
+    sources:
+      - path: App/Sources
+    resources:
+      # Folder reference (NOT a flattened group): the pages load
+      # owl-poses/, container-3d/, gift-voice/, … by relative path.
+      - path: App/Resources/www
+        type: folder
+      - path: App/Resources/bridge.js
+      - path: App/Assets.xcassets
+    info:
+      path: App/Resources/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.knozi.hub
+        PRODUCT_NAME: Knozi Hub
+        SWIFT_VERSION: "5"
+        MARKETING_VERSION: "1.128"
+        CURRENT_PROJECT_VERSION: "131"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
