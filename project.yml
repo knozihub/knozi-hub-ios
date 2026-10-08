@@ -22,9 +22,11 @@ targets:
     platform: iOS
     sources:
       - path: App/Sources
-    resources:
-      # Folder reference (NOT a flattened group): the pages load
-      # owl-poses/, container-3d/, gift-voice/, … by relative path.
+      # App resources live under sources: (there is no top-level
+      # target.resources key — xcodegen silently ignores it). File types
+      # are routed to Copy Bundle Resources by extension; www/ stays a
+      # folder reference (NOT a flattened group) so the pages keep their
+      # relative paths (owl-poses/, container-3d/, gift-voice/, …).
       - path: App/Resources/www
         type: folder
       - path: App/Resources/bridge.js
