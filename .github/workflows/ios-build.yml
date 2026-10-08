@@ -34,7 +34,7 @@ jobs:
         run: brew install xcodegen
 
       - name: Sync shared web assets
-        run: ./scripts/sync-assets.sh
+        run: bash scripts/sync-assets.sh
 
       - name: Generate Xcode project
         run: xcodegen generate
