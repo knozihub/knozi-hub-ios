@@ -1,0 +1,81 @@
+# Knozi Hub — iOS background-track build (unsigned IPA)
+#
+# The iOS app is a thin WKWebView shell around the SAME web assets the Android
+# app ships. This workflow:
+#   1. syncs the shared web assets (from $ANDROID_ASSETS_DIR when set, else
+#      from the latest public Android APK on knozihub.com/download),
+#   2. generates the Xcode project with xcodegen,
+#   3. builds an UNSIGNED release IPA on a macOS runner,
+#   4. verifies the www/ folder structure survived bundling,
+#   5. uploads the IPA as a build artifact.
+#
+# Signing / TestFlight is a later step and needs the Apple Developer account
+# (see ios-build/README.md — "What only you can do").
+
+# (This directory is the repo root: .github/ lives here.)
+name: ios-build-unsigned
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "App/**"
+      - "scripts/**"
+      - "project.yml"
+      - ".github/**"
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Sync shared web assets
+        run: ./scripts/sync-assets.sh
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build unsigned release
+        run: >
+          xcodebuild
+          -project KnoziHub.xcodeproj
+          -scheme KnoziHub
+          -sdk iphoneos
+          -configuration Release
+          -derivedDataPath build/derived
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
+          build
+
+      - name: Verify www/ folder structure in the bundle
+        run: |
+          APP="$(find build/derived/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' | head -1)"
+          echo "Built: $APP"
+          test -n "$APP"
+          # The pages rely on relative paths (owl-poses/, container-3d/, …) —
+          # fail loudly if xcodegen flattened the folder reference.
+          test -f "$APP/www/index.html"
+          test -f "$APP/www/knozi-abc.html"
+          test -f "$APP/www/knozi-storybook.html"
+          test -d "$APP/www/owl-poses"
+          test -f "$APP/bridge.js"
+          echo "Bundle structure OK"
+
+      - name: Package unsigned IPA
+        run: |
+          APP="$(find build/derived/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' | head -1)"
+          mkdir -p build/ipa/Payload
+          cp -R "$APP" build/ipa/Payload/
+          (cd build/ipa && zip -qr ../KnoziHub-unsigned.ipa Payload)
+          ls -la build/KnoziHub-unsigned.ipa
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: KnoziHub-unsigned-ipa
+          path: build/KnoziHub-unsigned.ipa
+          if-no-files-found: error
